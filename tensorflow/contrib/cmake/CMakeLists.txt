@@ -30,23 +30,23 @@ option(tensorflow_BUILD_CONTRIB_KERNELS "Build OpKernels from tensorflow/contrib
 option(tensorflow_BUILD_CC_TESTS "Build cc unit tests " OFF)
 option(tensorflow_BUILD_PYTHON_TESTS "Build python unit tests " OFF)
 option(tensorflow_BUILD_MORE_PYTHON_TESTS "Build more python unit tests for contrib packages" OFF)
-# Minimum CMake required
-cmake_minimum_required(VERSION 3.5)
+option(tensorflow_BUILD_SHARED_LIB "Build TensorFlow as a shared library" OFF)
+option(tensorflow_OPTIMIZE_FOR_NATIVE_ARCH "Enable compiler optimizations for the native processor architecture (if available)" ON)
+option(tensorflow_WIN_CPU_SIMD_OPTIONS "Enables CPU SIMD instructions")
+option(tensorflow_ENABLE_SNAPPY_SUPPORT "Enable SNAPPY compression support" ON)
 
-# Project
-project(tensorflow C CXX)
+if (NOT WIN32)
+  # Threads: defines CMAKE_THREAD_LIBS_INIT and adds -pthread compile option
+  # for targets that link ${CMAKE_THREAD_LIBS_INIT}.
+  find_package (Threads)
+endif()
 
-# Set C++14 as standard for the whole project
-set(CMAKE_CXX_STANDARD 14)
-
-# Actual source is the ../../.. directory
-get_filename_component(tf_contrib_source_dir ${tensorflow_SOURCE_DIR} PATH)
-get_filename_component(tf_tf_source_dir ${tf_contrib_source_dir} PATH)
-get_filename_component(tensorflow_source_dir ${tf_tf_source_dir} PATH)
-
-# [CLEANUP] Not sure if this is needed (copied from Protobuf)
-# CMake policies
-cmake_policy(SET CMP0022 NEW)
+# [CLEANUP] Remove when done
+# For debugging
+function(SHOW_VARIABLES)
+    get_cmake_property(_variableNames VARIABLES)
+    foreach (_variableName ${_variableNames})
+        message(STATUS "${_variableName}=${${_variableName}}")
 
 # Options
 option(tensorflow_VERBOSE "Enable for verbose output" OFF)
