@@ -30,6 +30,38 @@ option(tensorflow_BUILD_CONTRIB_KERNELS "Build OpKernels from tensorflow/contrib
 option(tensorflow_BUILD_CC_TESTS "Build cc unit tests " OFF)
 option(tensorflow_BUILD_PYTHON_TESTS "Build python unit tests " OFF)
 option(tensorflow_BUILD_MORE_PYTHON_TESTS "Build more python unit tests for contrib packages" OFF)
+# Minimum CMake required
+cmake_minimum_required(VERSION 3.5)
+
+# Project
+project(tensorflow C CXX)
+
+# Set C++14 as standard for the whole project
+set(CMAKE_CXX_STANDARD 14)
+
+# Actual source is the ../../.. directory
+get_filename_component(tf_contrib_source_dir ${tensorflow_SOURCE_DIR} PATH)
+get_filename_component(tf_tf_source_dir ${tf_contrib_source_dir} PATH)
+get_filename_component(tensorflow_source_dir ${tf_tf_source_dir} PATH)
+
+# [CLEANUP] Not sure if this is needed (copied from Protobuf)
+# CMake policies
+cmake_policy(SET CMP0022 NEW)
+
+# Options
+option(tensorflow_VERBOSE "Enable for verbose output" OFF)
+option(tensorflow_ENABLE_GPU "Enable GPU support" OFF)
+option(tensorflow_ENABLE_SSL_SUPPORT "Enable boringssl support" OFF)
+option(tensorflow_ENABLE_GRPC_SUPPORT "Enable gRPC support" ON)
+option(tensorflow_ENABLE_HDFS_SUPPORT "Enable HDFS support" OFF)
+option(tensorflow_ENABLE_JEMALLOC_SUPPORT "Enable jemalloc support" OFF)
+option(tensorflow_BUILD_CC_EXAMPLE "Build the C++ tutorial example" ON)
+option(tensorflow_BUILD_PYTHON_BINDINGS "Build the Python bindings" ON)
+option(tensorflow_BUILD_ALL_KERNELS "Build all OpKernels" ON)
+option(tensorflow_BUILD_CONTRIB_KERNELS "Build OpKernels from tensorflow/contrib/..." ON)
+option(tensorflow_BUILD_CC_TESTS "Build cc unit tests " OFF)
+option(tensorflow_BUILD_PYTHON_TESTS "Build python unit tests " OFF)
+option(tensorflow_BUILD_MORE_PYTHON_TESTS "Build more python unit tests for contrib packages" OFF)
 option(tensorflow_BUILD_SHARED_LIB "Build TensorFlow as a shared library" OFF)
 option(tensorflow_OPTIMIZE_FOR_NATIVE_ARCH "Enable compiler optimizations for the native processor architecture (if available)" ON)
 option(tensorflow_WIN_CPU_SIMD_OPTIONS "Enables CPU SIMD instructions")
@@ -47,70 +79,6 @@ function(SHOW_VARIABLES)
     get_cmake_property(_variableNames VARIABLES)
     foreach (_variableName ${_variableNames})
         message(STATUS "${_variableName}=${${_variableName}}")
-    endforeach()
-endfunction()
-
-# External dependencies
-set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/external)
-
-# Location where external projects will be downloaded
-set (DOWNLOAD_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/downloads"
-     CACHE PATH "Location where external projects will be downloaded.")
-mark_as_advanced(DOWNLOAD_LOCATION)
-
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-add_definitions(-DEIGEN_AVOID_STL_ARRAY)
-if(WIN32)
-  add_definitions(-DNOMINMAX -D_WIN32_WINNT=0x0A00 -DLANG_CXX11 -DCOMPILER_MSVC)
-  add_definitions(-DWIN32 -DOS_WIN -D_MBCS -DWIN64 -DWIN32_LEAN_AND_MEAN -DNOGDI -DPLATFORM_WINDOWS)
-  add_definitions(-DTENSORFLOW_USE_EIGEN_THREADPOOL -DEIGEN_HAS_C99_MATH)
-  add_definitions(-DTF_COMPILE_LIBRARY)
-  add_definitions(/bigobj /nologo /EHsc /GF /MP /Gm-)
-  # Suppress warnings to reduce build log size.
-  add_definitions(/wd4267 /wd4244 /wd
-  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /ignore:4049 /ignore:4197 /ignore:4217 /ignore:4221")
-  set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} /ignore:4049 /ignore:4197 /ignore:4217 /ignore:4221")
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /ignore:4049 /ignore:4197 /ignore:4217 /ignore:4221")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
-  set(CMAKE_CXX_FLAGS_DEBUG "/D_DEBUG /MDd /Ob2")
-  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /D_ITERATOR_DEBUG_LEVEL=0")
-  set(CMAKE_CXX_FLAGS_MINSIZEREL "${CMAKE_CXX_FLAGS_MINSIZEREL} /D_ITERATOR_DEBUG_LEVEL=0")
-  set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} /D_ITERATOR_DEBUG_LEVEL=0")
-endif()
-
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions -std=c++11")
-endif()
-
-if (tensorflow_OPTIMIZE_FOR_NATIVE_ARCH)
-  include(CheckCXXCompilerFlag)
-  CHECK_CXX_COMPILER_FLAG("-march=native" COMPILER_OPT_ARCH_NATIVE_SUPPORTED)
-  if (COMPILER_OPT_ARCH_NATIVE_SUPPORTED)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
-  endif()
-endif()
-
-# MSVC SIMD instructions
-if (tensorflow_WIN_CPU_SIMD_OPTIONS)
-  if (WIN32)
-    CHECK_CXX_COMPILER_FLAG("${tensorflow_WIN_CPU_SIMD_OPTIONS}" COMPILER_OPT_WIN_CPU_SIMD_SUPPORTED)
-    if(COMPILER_OPT_WIN_CPU_SIMD_SUPPORTED)
-      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${tensorflow_WIN_CPU_SIMD_OPTIONS}")
-    else()
-      message(FATAL_ERROR "${4800 /wd4503 /wd4554 /wd4996 /wd4348 /wd4018)
-  add_definitions(/wd4099 /wd4146 /wd4267 /wd4305 /wd4307)
-  add_definitions(/wd4715 /wd4722 /wd4723 /wd4838 /wd4309 /wd4334)
-  add_definitions(/wd4003 /wd4244 /wd4267 /wd4503 /wd4506 /wd4800 /wd4996)
-  # Suppress linker warnings.tensorflow_WIN_CPU_SIMD_OPTIONS} not supported")
-    endif()
-  endif()
-endif()
-
-if (tensorflow_ENABLE_JEMALLOC_SUPPORT)
-  add_definitions(-DTENSORFLOW_USE_JEMALLOC -DJEMALLOC_EXPORT=)
-endif()
-
-# External dependencies
 include(zlib)
 include(gif)
 include(png)
