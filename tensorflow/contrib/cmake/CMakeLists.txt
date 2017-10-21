@@ -88,7 +88,7 @@ if (tensorflow_OPTIMIZE_FOR_NATIVE_ARCH)
   if (COMPILER_OPT_ARCH_NATIVE_SUPPORTED)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
   endif()
-endif
+endif()
 
 # MSVC SIMD instructions
 if (tensorflow_WIN_CPU_SIMD_OPTIONS)
